@@ -1,0 +1,12 @@
+{
+	"name": "NYT Crosswords with Friends",
+	"version": "1.0",
+	"description": "play the NYT Crossword with friends",
+	"manifest_version":2,
+	"content_scripts": [
+		{
+			"matches": ["https://www.nytimes.com/crosswords/game*"],
+			"js": ["socket.io.js", "main.js"]
+		}
+	]
+}

@@ -1,0 +1,24 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+
+HELLO
+<script>
+	const connectionOptions =  {
+            "force new connection" : true,
+            "reconnectionAttempts": "Infinity", //avoid having user reconnect manually in order to prevent dead clients after a server restart
+            "timeout" : 10000, //before connect_error and connect_timeout are emitted.
+            "transports" : ["websocket"]
+    };
+
+ 	const socket = io("http://c893e263.ngrok.io", connectionOptions);
+  	// const socket = io('http://localhost:3000');
+
+	socket.on('connect', function() {
+	console.log('Client connected');
+	});
+
+	console.log(socket);
+  	socket.on('news', (data) => {
+    	console.log(data);
+    	socket.emit('my other event', { my: 'data' });
+  	});
+</script>
