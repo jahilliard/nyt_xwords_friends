@@ -5,7 +5,9 @@ const connectionOptions =  {
          "transports" : ["websocket"]
  };
 
-const curr_ngrok = 'e9fd039d.ngrok.io'
+const curr_ngrok = '6e6e4f9fae6e.ngrok.io'
+
+var userCurrentLocation = ''
 
 const socket = io("wss://" + curr_ngrok, connectionOptions);
 // const socket = io('http://localhost:3000');
@@ -13,57 +15,122 @@ const socket = io("wss://" + curr_ngrok, connectionOptions);
 // Select the node that will be observed for mutations
 const targetNodes = document.querySelectorAll('g[data-group="cells"] > g');
 
-// Options for the observer (which mutations to observe)
-const config = { characterData: true, subtree: true };
-
 // Callback function to execute when mutations are observed
 const updateSquare = function(mutationsList, observer) {
     // Use traditional 'for loops' for IE 11
+    // console.log(mutation)
+    console.log(mutationsList)
     for(let mutation of mutationsList) {
-        if (mutation.target.parentNode.attributes[0].value !== 'Cell-hidden--3xQI1') {
+        if (mutation.target.parentNode.attributes[0].value !== 'Cell-hidden--3xQI1' ){
             let cellId = mutation.target.parentNode.parentNode.firstChild.attributes[3].value.substring(8);
             let cellValue = mutation.target.data;
-            currentState.set(cellId,cellValue);
-            console.log(currentState)
-            updateSquareMetadata = { 
-                cellId: cellId, 
-                cellValue: cellValue 
-            }
-            socket.emit('updateSquare', updateSquareMetadata);
-        } 
+            if (cellValue !== currentState.get(cellId) &&
+                mutation.type === 'characterData'
+                ) {
+                currentState.set(cellId,cellValue);
+                updateSquareMetadata = { 
+                    cellId: cellId, 
+                    cellValue: cellValue 
+                }
+                socket.emit('updateSquare', updateSquareMetadata);
+            } 
+        }
     }
 };
 
 socket.on('updateSquare', function(data){
-    console.log(data);
     let cellId = data['cellId']
     let cellValue = data['cellValue']
+
     console.log(cellId);
-    console.log(cellValue);
-    var replacementInnerHTML = '<text class="Cell-hidden--3xQI1" aria-live="polite">' + cellValue + '</text>' + cellValue
-    console.log(replacementInnerHTML)
-    var currentSquare = document.getElementById('cell-id-' + cellId)
-    console.log(currentSquare)
-    currentSquare.parentElement.lastChild.innerHTML = replacementInnerHTML
-    console.log(currentSquare.parentElement.lastChild.innerHTML)
+
+    var letterConfig = {
+        altKey: false,
+        bubbles: true,
+        cancelBubble: false,
+        cancelable: true,
+        charCode: 97,
+        code: "Key" + cellValue.toUpperCase(),
+        composed: true,
+        ctrlKey: false,
+        currentTarget: null,
+        defaultPrevented: true,
+        detail: 0,
+        eventPhase: 0,
+        isComposing: false,
+        isTrusted: true,
+        key: cellValue.toLowerCase(),
+        keyCode: 97,
+        location: 0,
+        metaKey: false,
+    }
+
+    var backspaceConfig = {
+        altKey: false,
+        bubbles: true,
+        cancelBubble: false,
+        cancelable: true,
+        charCode: 0,
+        code: "Backspace",
+        composed: true,
+        ctrlKey: false,
+        currentTarget: null,
+        defaultPrevented: true,
+        detail: 0,
+        eventPhase: 0,
+        isComposing: false,
+        isTrusted: true,
+        key: "Backspace",
+        keyCode: 8,
+        location: 0,
+        metaKey: false,
+    }
+
+    var currentRect = document.getElementById('cell-id-' + cellId)
+
+    var currentUserSquareId = document.getElementsByClassName('Cell-selected--2PAbF')[0].id
+
+    currentRect.dispatchEvent(new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window
+    }));
+    // var currentRect = document.getElementById('cell-id-' + cellId).parentElement
+    // currentRect.addEventListener("keypress", event => { console.log(event)})
+    // currentRect.addEventListener("keydown", event => { console.log(event)})
+    currentRect.dispatchEvent(new KeyboardEvent(
+        cellValue === "" ? 'keydown' : 'keypress',
+        cellValue === "" ? backspaceConfig : letterConfig,
+    ));
+
+    document.getElementById(currentUserSquareId).dispatchEvent(new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window
+    }));
+
     currentState.set(cellId,cellValue);
-    console.log(data);
 });
 
 // Create an observer instance linked to the updateSquare function
-const observer = new MutationObserver(updateSquare)
+const updateSquareObserver = new MutationObserver(updateSquare)
+
 
 // Start observing the target node for configured mutations
-// targetNodes.foreach(node => observer.observe(node, config));
-
 let currentState = new Map()
-// myMap.set('bla','blaa')
+
+// Options for the content observer (which mutations to observe)
+const optionsConfig = { characterData: true, subtree: true };
+
+// Options for the content observer (which mutations to observe)
+const userStateConfig = { attributes: true };
 
 for(let node of targetNodes) {
     let cellId = node.firstChild.id.substring(8);
     let cellValue = node.lastChild.textContent.substring(0,1);
     currentState.set(cellId,cellValue);
-    observer.observe(node, config);
+    // 
+    updateSquareObserver.observe(node, optionsConfig);
 }
 
 console.log(currentState)
