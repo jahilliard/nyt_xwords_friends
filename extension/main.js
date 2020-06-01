@@ -5,7 +5,7 @@ const connectionOptions =  {
          "transports" : ["websocket"]
  };
 
-const curr_ngrok = '6e6e4f9fae6e.ngrok.io'
+const curr_ngrok = '103c76399d01.ngrok.io'
 
 var userCurrentLocation = ''
 
@@ -19,7 +19,7 @@ const targetNodes = document.querySelectorAll('g[data-group="cells"] > g');
 const updateSquare = function(mutationsList, observer) {
     // Use traditional 'for loops' for IE 11
     // console.log(mutation)
-    console.log(mutationsList)
+    // console.log(mutationsList)
     for(let mutation of mutationsList) {
         if (mutation.target.parentNode.attributes[0].value !== 'Cell-hidden--3xQI1' ){
             let cellId = mutation.target.parentNode.parentNode.firstChild.attributes[3].value.substring(8);
@@ -41,8 +41,6 @@ const updateSquare = function(mutationsList, observer) {
 socket.on('updateSquare', function(data){
     let cellId = data['cellId']
     let cellValue = data['cellValue']
-
-    console.log(cellId);
 
     var letterConfig = {
         altKey: false,
@@ -90,11 +88,13 @@ socket.on('updateSquare', function(data){
 
     var currentUserSquareId = document.getElementsByClassName('Cell-selected--2PAbF')[0].id
 
-    currentRect.dispatchEvent(new MouseEvent("click", {
-        bubbles: true,
-        cancelable: true,
-        view: window
-    }));
+    if(currentUserSquareId !== 'cell-id-' + cellId){
+        currentRect.dispatchEvent(new MouseEvent("click", {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+    }
     // var currentRect = document.getElementById('cell-id-' + cellId).parentElement
     // currentRect.addEventListener("keypress", event => { console.log(event)})
     // currentRect.addEventListener("keydown", event => { console.log(event)})
